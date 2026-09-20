@@ -115,8 +115,8 @@ python manage.py test catalog
 
 | Component | Service | Notes |
 |---|---|---|
-| Frontend | [Netlify](https://netlify.com) | Build: `npm run build` - `frontend/dist` folder |
-| Backend | [Render](https://render.com) | Free tier |
+| Frontend | [Netlify](https://netlify.com) | Live at [ck-business-catalogue.netlify.app](https://ck-business-catalogue.netlify.app)  |
+| Backend | [Render](https://render.com) | Live at [catalogstore-api.onrender.com](https://catalogstore-api.onrender.com) |
 | Database | [Neon](https://neon.tech) | Free PostgreSQL, no expiry |
 | Photos | [Cloudinary](https://cloudinary.com) | 25 free credits/month |
 
@@ -125,23 +125,26 @@ Environment variables to set on Render:
 ```bash
 SECRET_KEY=...
 DEBUG=False
-ALLOWED_HOSTS=your-service-name.onrender.com
-CORS_ALLOWED_ORIGINS=https://your-site-name.netlify.app
+ALLOWED_HOSTS=catalogstore-api.onrender.com
+CORS_ALLOWED_ORIGINS=https://ck-business-catalogue.netlify.app
 DATABASE_URL=... (provided by Neon)
 CLOUDINARY_CLOUD_NAME=...
 CLOUDINARY_API_KEY=...
 CLOUDINARY_API_SECRET=...
+DJANGO_SUPERUSER_USERNAME=...
+DJANGO_SUPERUSER_EMAIL=...
+DJANGO_SUPERUSER_PASSWORD=...
 ```
 
 Render build command:
 
 ```bash
-pip install -r requirements.txt && python manage.py collectstatic --noinput --upload-unhashed-files && python manage.py migrate
+pip install -r requirements.txt && python manage.py collectstatic --noinput --upload-unhashed-files && python manage.py migrate && python manage.py create_superuser_if_none_exists
 ```
 
 Environment variables to set on Netlify:
 
 ```bash
-VITE_API_URL=https://your-service-name.onrender.com/api
-VITE_STORE_SLUG=the-store-slug
+VITE_API_URL=https://catalogstore-api.onrender.com/api
+VITE_STORE_SLUG=ck-business
 ```
