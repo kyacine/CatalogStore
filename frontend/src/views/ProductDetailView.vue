@@ -1,5 +1,5 @@
 <script setup>
-import { computed, inject, onMounted, ref, watch } from "vue"
+import { computed, inject, onMounted, onUnmounted, ref, watch } from "vue"
 import { useRoute } from "vue-router"
 import StoreHeader from "../components/StoreHeader.vue"
 import { fetchProduct } from "../lib/api"
@@ -18,6 +18,43 @@ const activeImageIndex = ref(0)
 const activeImage = computed(() => product.value?.images?.[activeImageIndex.value] || null)
 const whatsappLink = computed(() => (product.value ? buildWhatsAppLink(product.value) : "#"))
 
+const DEFAULT_TITLE = import.meta.env.VITE_SITE_TITLE
+const DEFAULT_DESCRIPTION = import.meta.env.VITE_SITE_DESCRIPTION
+
+function setMetaDescription(text) {
+  let tag = document.querySelector('meta[name="description"]')
+  if (!tag) {
+    tag = document.createElement("meta")
+    tag.setAttribute("name", "description")
+    document.head.appendChild(tag)
+  }
+  tag.setAttribute("content", text)
+}
+
+function truncate(text, max = 120) {
+  const clean = (text || "").replace(/\s+/g, " ").trim()
+  return clean.length > max ? clean.slice(0, max - 1).trimEnd() + "…" : clean
+}
+
+function updateSeo(p) {
+  const storeName = store.value?.name || ""
+  document.title = storeName ? `${p.name} | ${storeName}` : p.name
+
+  const parts = [p.name]
+  if (p.category) parts.push(`(${p.category.name})`)
+  let text = parts.join(" ")
+  if (storeName) text += ` chez ${storeName}`
+  text += "."
+  if (p.description) text += ` ${truncate(p.description)}`
+  text += " Commandez via WhatsApp."
+  setMetaDescription(text)
+}
+
+function resetSeo() {
+  document.title = DEFAULT_TITLE
+  setMetaDescription(DEFAULT_DESCRIPTION)
+}
+
 async function loadProduct() {
   loading.value = true
   error.value = null
@@ -26,6 +63,7 @@ async function loadProduct() {
     product.value = await fetchProduct(storeSlug, route.params.id)
   } catch (err) {
     error.value = "Ce produit est introuvable ou n'est plus disponible."
+    product.value = null
   } finally {
     loading.value = false
   }
@@ -39,6 +77,12 @@ onMounted(loadProduct)
 // Si on navigue d'une fiche produit à une autre (ex: produits liés plus tard),
 // on recharge sans devoir démonter/remonter le composant.
 watch(() => route.params.id, loadProduct)
+// Se relance quand le produit ou la boutique arrive (ordre de chargement non garanti)
+watch([product, store], () => {
+  if (product.value) updateSeo(product.value)
+  else resetSeo()
+})
+onUnmounted(resetSeo)
 </script>
 
 <template>
